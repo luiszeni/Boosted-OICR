@@ -282,7 +282,7 @@ We used the code available [here](https://github.com/ppengtang/fast-rcnn)
 We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues for making the [PCL](https://github.com/ppengtang/pcl.pytorch) and [OICR](https://github.com/ppengtang/oicr) codes publicly available. 
 
 ### TODO list:
-- [ ] Adjust config file for voc2012.
+- [x] Adjust config file for voc2012.
 - [x] Upload trained models.
 - [x] Add the visualization script
 - [ ] Add final paper link and the latex bibtex reference
