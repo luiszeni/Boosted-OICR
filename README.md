@@ -261,10 +261,16 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 
 ##### Visualize the nice detections
-TODOTODOTODOTODO
 
+Create a folder to save the outputs
   ```Shell
-  Why the chicken crossed the street?
+  mkdir output
+  ```
+
+Run the visualization script
+  ```Shell
+  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
+  --detections snapshots/deepvision2020/test/final/detections.pkl --output_dir output
   ```
 
 
@@ -276,7 +282,7 @@ We used the code available [here](https://github.com/ppengtang/fast-rcnn)
 We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues for making the [PCL](https://github.com/ppengtang/pcl.pytorch) and [OICR](https://github.com/ppengtang/oicr) codes publicly available. 
 
 ### TODO list:
-- [ ] Adjust config files.
+- [ ] Adjust config file for voc2012.
 - [x] Upload trained models.
-- [ ] Add the visualization script
+- [x] Add the visualization script
 - [ ] Add final paper link and the latex bibtex reference
