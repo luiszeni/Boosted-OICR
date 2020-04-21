@@ -1,0 +1,17 @@
+__pycache__/
+.DS_Store
+**/.DS_Store
+data/
+snapshots/
+matlab/
+octave-workspace
+# OS Generated #
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+*.swp
+._*
+*.so
+*.cu.o
+*.npy

@@ -1,75 +1,42 @@
-# PCL: Proposal Cluster Learning for Weakly Supervised Object Detection
+# Distilling Knowledge from Refinement in Multiple Instance Detection Networks (Boosted-OICR)
+By [Luis Felipe Zeni](http://luiszeni.com.br/) and [Claudio Jung](http://www.inf.ufrgs.br/~crjung/).
 
-By [Peng Tang](https://pengtang.xyz/), [Xinggang Wang](http://www.xinggangw.info/), [Song Bai](http://songbai.site/), [Wei Shen](http://songbai.site/), [Xiang Bai](http://122.205.5.5:8071/~xbai/), [Wenyu Liu](http://mclab.eic.hust.edu.cn/MCWebDisplay/PersonDetails.aspx?Name=Wenyu%20Liu), and [Alan Yuille](http://www.cs.jhu.edu/~ayuille/).
+**Institute of Informatics, Federal University of Rio Grande do Sul, Brazil**
 
-**This is a PyTorch implementation of our PCL. The original Caffe implementation of PCL is available [here](https://github.com/ppengtang/oicr/tree/pcl).**
+This repository contains the PyTorch implementation of our paper [Distilling Knowledge from Refinement in Multiple Instance Detection Networks](http://soon) published in Deep Vision 2020 CVPR workshop. (Go to Contents section if you are interested in how to run the code).
 
-**We embed the [trick](http://pengtang.xyz/publications/0640-supp.pdf) proposed in our [ECCV paper](http://pengtang.xyz/publications/0640.pdf) for better performance.**
+In this work, we claim that carefully selecting the aggregation criteria can considerably improve the accuracy of the learned detector. We start by proposing an additional refinement step to an existing approach (OICR), which we call refinement knowledge distillation. Then, we present an adaptive supervision aggregation function that dynamically changes the aggregation criteria for selecting boxes related to one of the ground-truth classes, background, or even ignored during the generation of each refinement module supervision. We call these improvements "Boosted-OICR". 
 
-**The final performance of this implementation is mAP 49.2% and CorLoc 65.0% on PASCAL VOC 2007 using a single VGG16 model. The results are comparable with the recent state of the arts.**
-
-### Introduction
-
-**Proposal Cluster Learning (PCL)** is a framework for weakly supervised object detection with deep ConvNets.
- - It achieves state-of-the-art performance on weakly supervised object detection (Pascal VOC 2007 and 2012, ImageNet DET, COCO).
- - Our code is written based on [PyTorch](https://pytorch.org/), [Detectron.pytorch](https://github.com/roytseng-tw/Detectron.pytorch), and [faster-rcnn.pytorch](https://github.com/jwyang/faster-rcnn.pytorch).
-
-The original paper has been accepted by CVPR 2017. This is an extened version.
-For more details, please refer to [here](https://arxiv.org/abs/1704.00138) and [here](https://arxiv.org/abs/1807.03342).
-
-### Comparison with other methods
-(a) Conventional MIL method;
-(b) Our original OICR method with newly proposed proposal cluster generation method;
-(c) Our PCL method.
+### We made improvements in OICR's architecture
 
 <p align="left">
-<img src="images/method_compare.jpg" alt="method compare" width="500px">
-
-### Architecture
-
-<p align="left">
-<img src="images/architecture.jpg" alt="PCL architecture" width="900px">
+<img src="images/cvpr_arch_2020.png" alt="Boosted-OICR architecture" width="900px">
 </p>
 
-### Visualizations
-
-Some PCL visualization results.
+### And also improved "le trick"
 <p align="left">
-<img src="images/detections.jpg" alt="Some visualization results" width="900px">
+<img src="images/smooth_supervision.png" alt="le trick" width="300px">
 </p>
 
-Some visualization comparisons among WSDDN, WSDDN+context, and PCL.
+### Some cool detection results visualizations
+
 <p align="left">
-<img src="images/detections_compare.jpg" alt="Some visualization comparisons among WSDDN, WSDDN+context, and PCL" width="900px">
+<img src="images/cvpr_results_2020.png" alt="Some visualization results" width="800px">
 </p>
 
 ### License
 
-PCL is released under the MIT License (refer to the LICENSE file for details).
+Our code is under the MIT License (refer to the LICENSE file for details).
 
-### Citing PCL
+### Citing Boosted-OICR
 
-If you find PCL useful in your research, please consider citing:
+If you find our paper or our implementation useful in your research, please consider citing:
 
-    @article{tang2018pcl,
-        author = {Tang, Peng and Wang, Xinggang and Bai, Song and Shen, Wei and Bai, Xiang and Liu, Wenyu and Yuille, Alan},
-        title = {{PCL}: Proposal Cluster Learning for Weakly Supervised Object Detection},
-        journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
-        volume = {},
-        number = {},
-        pages = {1--1},
-        year = {2018}
+    @article{zeni2020boostedoicr,
+        SOON 
     }
 
-    @inproceedings{tang2017multiple,
-        author = {Tang, Peng and Wang, Xinggang and Bai, Xiang and Liu, Wenyu},
-        title = {Multiple Instance Detection Network with Online Instance Classifier Refinement},
-        booktitle = {IEEE Conference on Computer Vision and Pattern Recognition},
-        pages = {3059--3067},
-        year = {2017}
-    }
-
-### Contents
+### Contents:
 1. [Requirements: software](#requirements-software)
 2. [Requirements: hardware](#requirements-hardware)
 3. [Basic installation](#installation)
@@ -80,133 +47,227 @@ If you find PCL useful in your research, please consider citing:
 
 ### Requirements: software
 
-Tested under python3.
+- python3 packages and versions used (listed using freeze frin pip):
+    - cycler==0.10.0
+    - Cython==0.29.16
+    - joblib==0.14.1
+    - kiwisolver==1.2.0
+    - matplotlib==3.2.1
+    - numpy==1.18.2
+    - opencv-python==4.2.0.34
+    - packaging==20.3
+    - Pillow==6.1.0
+    - protobuf==3.11.3
+    - pycocotools==2.0.0 (available from pip)
+    - pyparsing==2.4.7
+    - python-dateutil==2.8.1
+    - PyYAML==5.3.1
+    - scikit-learn==0.22.2.post1
+    - scipy==1.4.1
+    - six==1.14.0
+    - sklearn==0.0
+    - tensorboardX==2.0
+    - torch==1.2.0+cu92
+    - torchvision==0.4.0+cu92
 
-- python packages
-  - pytorch==0.4.1
-  - torchvision>=0.2.0
-  - cython
-  - matplotlib
-  - numpy
-  - scipy
-  - opencv
-  - pyyaml==3.12
-  - packaging
-  - [pycocotools](https://github.com/cocodataset/cocoapi)  — also available from pip.
-  - tensorboardX  — for logging the losses in Tensorboard
-  - sklearn
-- An NVIDAI GPU and CUDA 8.0 or higher. Some operations only have gpu implementation.
-- **NOTICE**: different versions of Pytorch package have different memory usages.
+- An Nnvidia GPU wuth suport to CUDA 
+    - We used cuda 10.0 and cudnn 7.0
+    - We used an Nvidia Titan Xp with 12G of memory. But it shold be ok to train if you have a GPU with at least 8Gb.
+    - **NOTICE**: different versions of Pytorch have different memory usages.
 
-### Requirements: hardware
+- Docker
+    - If you are not using Docker to run your experiments, we highly recommend that you start using it. In the folder, 'docker' is the Dockerfile to build a docker container to run our code ;). 
 
-1. NVIDIA GTX 1080Ti (~11G of memory)
 
 ### Installation
 
-1. Clone the PCL repository
-  ```Shell
-  git clone https://github.com/ppengtang/pcl.pytorch.git & cd pcl.pytorch
-  ```
+1. Clone this repository
+    ```Shell
+    git clone https://github.com/luiszeni/Boosted-OICR && cd Boosted-OICR
+    ```
+  
+2. [Optional]  Build the docker-machine and start it.
+You should have the Nvidia-docker installed in your host machine
 
-2. Compile the CUDA code:
-  ```Shell
-  cd $PCL_ROOT/lib
-  sh make.sh
-  ```
+    2.1. Enter in the docker folder inside the repo
+    ```Shell
+    cd $BOOSTED_OICR_ROOT/docker
+    ```
+    2.2. Build the docker image 
+    ```Shell
+    docker build . -t boosted-oicr
+    ```
+    2.3. Return to the root of the repo ($BOOSTED_OICR_ROOT)
+    ```Shell
+    cd ..
+    ```
+    2.4 Create a container using the image.  I prefer to mount an external volume with the code in a folder in the host machine. It makes it easier to edit the code using a GUI-text-editor or ide. This command will drop you in the container shell.
+    ```Shell
+    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Bosted-OICR --shm-size 12G -ti --name boicr boosted-oicr
+    ```
+  
+    2.5 If, in any moment of the future, you exit the container, you can enter the container again using this command.
+      ```Shell
+      docker start -ai boicr 
+      ```
+  
+    **Observation:** I will not talk about how to display windows using X11 forwarding from the container to the host X. You will need this if you are interested to use the visualization scripts. There are a lot of tutorials on the internet teching X11 Foward in Docker. 
+  
 
-### Installation for training and testing
-1. Download the training, validation, test data and VOCdevkit
 
-  ```Shell
-  wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-  wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
-  wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCdevkit_18-May-2011.tar
-  ```
+### Setting up for training and testing
+1. Create a "data" folder in  $BOOSTED_OICR_ROOT and enter in this folder
+    ```Shell
+    mkdir data
+    cd data
+    ```
+2. Download the training, validation, test data, and VOCdevkit
+    ```Shell
+    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
+    ```
+    Optional, normally faster to download, links to VOC (from darknet):
+    ```Shell
+    wget https://pjreddie.com/media/files/VOCtrainval_06-Nov-2007.tar
+    wget https://pjreddie.com/media/files/VOCtest_06-Nov-2007.tar
+    ```
+3. Extract all of these tars into one directory named `VOCdevkit`
+    ```Shell
+    tar xvf VOCtrainval_06-Nov-2007.tar
+    tar xvf VOCtest_06-Nov-2007.tar
+    ```
 
-2. Extract all of these tars into one directory named `VOCdevkit`
+4. Download the VOCdevkit evaluation code adapted to octave
+    ```Shell
+    wget http://inf.ufrgs.br/~lfazeni/CVPR_deepvision2020/VOCeval_octave.tar
+    ```
 
-  ```Shell
-  tar xvf VOCtrainval_06-Nov-2007.tar
-  tar xvf VOCtest_06-Nov-2007.tar
-  tar xvf VOCdevkit_18-May-2011.tar
-  ```
+5. Extract VOCeval_octave
+    ```Shell
+    tar xvf VOCeval_octave.tar
+    ```
 
-3. Download the COCO format pascal annotations from [here](https://drive.google.com/drive/folders/1R4leOIYxP9qHJ2dVQJ4fKv2CoEHeEu41?usp=sharing) and put them into the `VOC2007/annotations` directory
+6. Download pascal annotations in the COCO format
+    ```Shell
+    wget http://inf.ufrgs.br/~lfazeni/CVPR_deepvision2020/coco_annotations_VOC.tar
+    ```
+7. Extract the annotations
+    ```Shell
+    tar xvf coco_annotations_VOC.tar
+    ```
 
-4. It should have this basic structure
+8. It should have this basic structure
+    ```Shell
+    $VOC2007/                           
+    $VOC2007/annotations
+    $VOC2007/JPEGImages
+    $VOC2007/VOCdevkit        
+    # ... and several other directories ...
+    ```
+9. [Optional] download and extract PASCAL VOC 2012.
+    ```Shell
+    wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+    tar xvf VOCtrainval_11-May-2012.tar
+    ```
+    or
+    ```Shell
+    wget https://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar
+    tar xvf VOCtrainval_11-May-2012.tar
+    ```
+    **Observation:** The  '2012 test set' is only available in the [PASCAL VOC Evaluation Server](http://host.robots.ox.ac.uk:8080/) to download. You must create a user and download it by yourself. After downloading, you can extract it in the data folder.
+    
+    
+10. Download the proposals data generated by selective search
+    ```Shell
+    wget http://inf.ufrgs.br/~lfazeni/CVPR_deepvision2020/selective_search_data.tar
+    ```
+11. Extract the proposals
+    ```Shell
+    tar xvf selective_search_data.tar
+    ```
+12. Download the pre-trained VGG16 model
+    ```Shell
+    wget http://inf.ufrgs.br/~lfazeni/CVPR_deepvision2020/pretrained_model.tar
+    ```
+13. Extract the pre-trained VGG16 model
+    ```Shell
+    tar xvf pretrained_model.tar
+    ```
 
-  ```Shell
-  $VOC2007/                           
-  $VOC2007/annotations
-  $VOC2007/JPEGImages
-  $VOC2007/VOCdevkit        
-  # ... and several other directories ...
-  ```
-
-4. Create symlinks for the PASCAL VOC dataset
-
-  ```Shell
-  cd $PCL_ROOT/data
-  ln -s $VOC2007 VOC2007
-  ```
-  Using symlinks is a good idea because you will likely want to share the same PASCAL dataset installation between multiple projects.
-
-5. [Optional] follow similar steps to get PASCAL VOC 2012.
-
-6. You should put the generated proposal data under the folder $PCL_ROOT/data/selective_search_data, with the name "voc_2007_trainval.pkl", "voc_2007_test.pkl". You can downlad the Selective Search proposals [here](https://drive.google.com/drive/folders/1dAH1oPZHKGWowOFVewblSQDJzKobTR5A?usp=sharing).
-
-7. The pre-trained models are available at: [Dropbox](https://www.dropbox.com/s/s3brpk0bdq60nyb/vgg16_caffe.pth?dl=0), [VT Server](https://filebox.ece.vt.edu/~jw2yang/faster-rcnn/pretrained-base-models/vgg16_caffe.pth). You should put it under the folder $PCL_ROOT/data/pretrained_model.
-
-### Download models trained on PASCAL VOC
-
-Models trained on PASCAL VOC can be downloaded here: [Google Drive](https://drive.google.com/drive/folders/1OG56zqBv_gbLsDXySpLi55bYy5Q9Tf2-?usp=sharing), [Baidu Yun](https://pan.baidu.com/s/1k5SvtFAXmz0dJ9-QLeaq8Q) (Password: 3l06).
-
+14. [optional] Delete the downloaded files to free space
+    ```Shell
+    rm *.tar
+    ```  
+15. Return to the root folder  $BOOSTED_OICR_ROOT
+    ```Shell
+    cd ..
+    ```  
+### Downloading model trained on PASCAL VOC 2007
+1. Download the pretrained files at the root folder ($BOOSTED_OICR_ROOT) folder
+    ```Shell
+    wget http://inf.ufrgs.br/~lfazeni/CVPR_deepvision2020/trained_models.tar
+    ```
+2. Extract it
+    ```Shell
+    tar xvf trained_models.tar
+    ```
+3. Delete the tar file to free space
+    ```Shell
+    rm trained_models.tar
+    ``` 
 ### Usage
 
-**Train** a PCL network. For example, train a VGG16 network on VOC 2007 trainval
+#### Running detection and localization on weighs used on the paper 
 
+##### Calculating the corloc in Pascal VOC 2007 (trainval set)
   ```Shell
-  CUDA_VISIBLE_DEVICES=0 python tools/train_net_step.py --dataset voc2007 \
-    --cfg configs/baselines/vgg16_voc2007.yaml --bs 1 --nw 4 --iter_size 4
-  ```
-**Note: The current implementation has a bug on multi-gpu training and thus does not support multi-gpu training.**
-
-**Test** a PCL network. For example, test the VGG 16 network on VOC 2007:
-
-#### On trainval
-  ```Shell
-  python tools/test_net.py --cfg configs/baselines/vgg16_voc2007.yaml \
-    --load_ckpt Outputs/vgg16_voc2007/$MODEL_PATH \
-    --dataset voc2007trainval
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval --model oicr_lambda_log_distillation --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
-#### On test
+##### Calculating the detection mAP in Pascal VOC 2007 (test set)
   ```Shell
-  python tools/test_net.py --cfg configs/baselines/vgg16_voc2007.yaml \
-    --load_ckpt Outputs/vgg16_voc2007/$model_path \
-    --dataset voc2007test
+  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test --model oicr_lambda_log_distillation --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
-Test output is written underneath `$PCL_ROOT/Outputs`.
 
-**Note: Add `--multi-gpu-testing` if multiple gpus are available.**
+#### Training your own model ;DD
 
-#### Evaluation
-For mAP, run the python code tools/reval.py
+To **Train** the Boosted-OICR network on VOC 2007 trainval set:
+
   ```Shell
-  python tools/reeval.py --result_path $output_dir/detections.pkl \
-    --dataset voc2007test --cfg configs/baselines/vgg16_voc2007.yaml
+  python3 code/tasks/train.py --cfg configs/baselines/vgg16_voc2007.yaml --model oicr_lambda_log_distillation
   ```
 
-For CorLoc, run the python code tools/reval.py
+To **Evaluate** the Boosted-OICR network on VOC 2007:
+
+##### On trainval (corloc)
   ```Shell
-  python tools/reeval.py --result_path $output_dir/discovery.pkl \
-    --dataset voc2007trainval --cfg configs/baselines/vgg16_voc2007.yaml
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval --model oicr_lambda_log_distillation --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
   ```
 
-### What we are going to do
+##### On test (detection mAP)
+  ```Shell
+   python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test --model oicr_lambda_log_distillation --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
+  ```
 
-- [x] Add PASCAL VOC 2012 configurations.
+
+##### Visualize the nice detections
+TODOTODOTODOTODO
+
+  ```Shell
+  Why the chicken crossed the street?
+  ```
+
+
+##### Training a Fast-RCNN using the trained model.
+
+We used the code available [here](https://github.com/ppengtang/fast-rcnn) 
+
+### Special Thanks:
+We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues for making the [PCL](https://github.com/ppengtang/pcl.pytorch) and [OICR](https://github.com/ppengtang/oicr) codes publicly available. 
+
+### TODO list:
+- [ ] Adjust config files.
 - [x] Upload trained models.
-- [ ] Support multi-gpu training.
+- [ ] Add the visualization script
+- [ ] Add final paper link and the latex bibtex reference
