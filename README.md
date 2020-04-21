@@ -103,7 +103,8 @@ You should have the Nvidia-docker installed in your host machine
     ```
     2.4 Create a container using the image.  I prefer to mount an external volume with the code in a folder in the host machine. It makes it easier to edit the code using a GUI-text-editor or ide. This command will drop you in the container shell.
     ```Shell
-    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Bosted-OICR --shm-size 12G -ti --name boicr boosted-oicr
+    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Bosted-OICR --shm-size 12G -ti \
+    --name boicr boosted-oicr
     ```
   
     2.5 If, in any moment of the future, you exit the container, you can enter the container again using this command.
@@ -221,12 +222,16 @@ You should have the Nvidia-docker installed in your host machine
 
 ##### Calculating the corloc in Pascal VOC 2007 (trainval set)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval --model oicr_lambda_log_distillation --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval \
+    --model oicr_lambda_log_distillation \
+    --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
 ##### Calculating the detection mAP in Pascal VOC 2007 (test set)
   ```Shell
-  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test --model oicr_lambda_log_distillation --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
+  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
+  --model oicr_lambda_log_distillation \
+  --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
 
@@ -242,12 +247,16 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 ##### On trainval (corloc)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval --model oicr_lambda_log_distillation --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval \
+    --model oicr_lambda_log_distillation \
+    --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
   ```
 
 ##### On test (detection mAP)
   ```Shell
-   python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test --model oicr_lambda_log_distillation --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
+   python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
+   --model oicr_lambda_log_distillation \
+   --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
   ```
 
 
