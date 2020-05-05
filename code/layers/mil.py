@@ -18,6 +18,16 @@ class MIL(nn.Module):
         nn.init.normal_(self.mil_score1.weight, std=0.01)
         nn.init.constant_(self.mil_score1.bias, 0)
 
+    def detectron_weight_mapping(self):
+        detectron_weight_mapping = {
+            'mil_score0.weight': 'mil_score0_w',
+            'mil_score0.bias': 'mil_score0_b',
+            'mil_score1.weight': 'mil_score1_w',
+            'mil_score1.bias': 'mil_score1_b'
+        }
+        orphan_in_detectron = []
+        return detectron_weight_mapping, orphan_in_detectron
+
     def forward(self, x):
         if x.dim() == 4:
             x = x.squeeze(3).squeeze(2)

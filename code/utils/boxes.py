@@ -44,6 +44,10 @@ import warnings
 import numpy as np
 
 from tasks.config import cfg
+# import utils.cython_bbox as cython_bbox
+# import utils.cython_nms as cython_nms
+
+# bbox_overlaps = cython_bbox.bbox_overlaps
 
 
 def boxes_area(boxes):
@@ -306,6 +310,13 @@ def box_voting(top_dets, all_dets, thresh, scoring_method='ID', beta=1.0):
             )
 
     return top_dets_out
+
+
+def nms(dets, thresh):
+    """Apply classic DPM-style greedy NMS."""
+    if dets.shape[0] == 0:
+        return []
+    return cython_nms.nms(dets, thresh)
 
 
 def soft_nms(

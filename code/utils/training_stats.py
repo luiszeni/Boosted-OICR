@@ -25,19 +25,16 @@ from tasks.config import cfg
 from utils.logging import log_stats
 from utils.logging import SmoothedValue
 from utils.timer import Timer
-import utils.net as nu
 
-from pdb import set_trace as pause
 
 class TrainingStats(object):
     """Track vital training statistics."""
 
-    def __init__(self, misc_args, tblogger):
+    def __init__(self, misc_args, log_period=20, tensorboard_logger=None):
         # Output logging period in SGD iterations
         self.misc_args = misc_args
-        # pause()
-        self.LOG_PERIOD = misc_args.disp_interval
-        self.tblogger = tblogger
+        self.LOG_PERIOD = log_period
+        self.tblogger = tensorboard_logger
         self.tb_ignored_keys = ['iter', 'eta']
         self.iter_timer = Timer()
         # Window size for smoothing tracked values (with median filtering)
@@ -60,13 +57,9 @@ class TrainingStats(object):
         self.iter_timer.reset()
 
     def UpdateIterStats(self, model_out, inner_iter=None):
-
-        if 'extras' in model_out:
-            self.extras = model_out['extras']
-        else:
-            self.extras = None
+        self.delta = model_out['delta']
         """Update tracked iteration statistics."""
-        if inner_iter is not None and cfg.TRAIN.ITERATION_SIZE > 1:
+        if inner_iter is not None and self.misc_args.iter_size > 1:
             # For the case of using args.iter_size > 1
             return self._UpdateIterStats_inner(model_out, inner_iter)
 
@@ -87,7 +80,7 @@ class TrainingStats(object):
 
     def _UpdateIterStats_inner(self, model_out, inner_iter):
         """Update tracked iteration statistics for the case of iter_size > 1"""
-        assert inner_iter < cfg.TRAIN.ITERATION_SIZE
+        assert inner_iter < self.misc_args.iter_size
 
         total_loss = 0
 
@@ -97,30 +90,32 @@ class TrainingStats(object):
                 self.inner_losses[k] = []
 
         for k, loss in model_out['losses'].items():
+            assert loss.shape[0] == cfg.NUM_GPUS
+            loss = loss.mean(dim=0, keepdim=True)
             total_loss += loss
-            loss_data = loss.item()
+            loss_data = loss.data[0]
 
             model_out['losses'][k] = loss
 
             self.inner_losses[k].append(loss_data)
-            if inner_iter == (cfg.TRAIN.ITERATION_SIZE - 1):
+            if inner_iter == (self.misc_args.iter_size - 1):
                 loss_data = self._mean_and_reset_inner_list('inner_losses', k)
                 self.smoothed_losses[k].AddValue(loss_data)
 
         model_out['total_loss'] = total_loss  # Add the total loss for back propagation
-        total_loss_data = total_loss.item()
+        total_loss_data = total_loss.data[0]
         self.inner_total_loss.append(total_loss_data)
-        if inner_iter == (cfg.TRAIN.ITERATION_SIZE - 1):
+        if inner_iter == (self.misc_args.iter_size - 1):
             total_loss_data = self._mean_and_reset_inner_list('inner_total_loss')
             self.smoothed_total_loss.AddValue(total_loss_data)
 
     def _mean_and_reset_inner_list(self, attr_name, key=None):
         """Take the mean and reset list empty"""
         if key:
-            mean_val = sum(getattr(self, attr_name)[key]) / cfg.TRAIN.ITERATION_SIZE
+            mean_val = sum(getattr(self, attr_name)[key]) / self.misc_args.iter_size
             getattr(self, attr_name)[key] = []
         else:
-            mean_val = sum(getattr(self, attr_name)) / cfg.TRAIN.ITERATION_SIZE
+            mean_val = sum(getattr(self, attr_name)) / self.misc_args.iter_size
             setattr(self, attr_name, [])
         return mean_val
 
@@ -140,7 +135,7 @@ class TrainingStats(object):
                 v = stats[k]
                 if isinstance(v, dict):
                     self.tb_log_stats(v, cur_iter)
-                elif v is not None:
+                else:
                     self.tblogger.add_scalar(k, v, cur_iter)
 
     def GetStats(self, cur_iter, lr):
@@ -160,5 +155,5 @@ class TrainingStats(object):
         for k, v in self.smoothed_losses.items():
             head_losses.append((k, v.GetMedianValue()))
         stats['head_losses'] = OrderedDict(head_losses)
-        stats['extras'] = self.extras 
+        stats['delta'] = self.delta
         return stats

@@ -23,9 +23,7 @@ import smtplib
 import sys
 
 from tasks.config import cfg
-from utils.smoothed_value import SmoothedValue
 
-from pdb import set_trace as pause
 # Print lower precision floating point values than default FLOAT_REPR
 # Note! Has no use for json encode with C speedups
 json.encoder.FLOAT_REPR = lambda o: format(o, '.6f')
@@ -45,22 +43,39 @@ def log_stats(stats, misc_args):
         lines = "[%s][%s][Step %d / %d]\n" % (
             misc_args.run_name, misc_args.cfg_filename, stats['iter'], cfg.SOLVER.MAX_ITER)
 
-    lines += "\t\tloss: %.6f, lr: %.6f time: %.6f, eta: %s\n" % (
-        stats['loss'], stats['lr'], stats['time'], stats['eta']
+    lines += "\t\tloss: %.6f, lr: %.6f time: %.6f, eta: %s, delta: %.6f\n" % (
+        stats['loss'], stats['lr'], stats['time'], stats['eta'], stats['delta']
     )
-
-    if stats['extras'] is not None:
-        extra_line = '\t\t'
-        extras = stats['extras']
-        for k, v in extras.items():
-            extra_line += "%s: %.6f," % (k,v)
-        lines +=  extra_line + '\n'
-
     if stats['head_losses']:
         lines += "\t\t" + ", ".join("%s: %.6f" % (k, v) for k, v in stats['head_losses'].items()) + "\n"
     print(lines[:-1])  # remove last new line
 
 
+class SmoothedValue(object):
+    """Track a series of values and provide access to smoothed values over a
+    window or the global series average.
+    """
+
+    def __init__(self, window_size):
+        self.deque = deque(maxlen=window_size)
+        self.series = []
+        self.total = 0.0
+        self.count = 0
+
+    def AddValue(self, value):
+        self.deque.append(value.item())
+        self.series.append(value.item())
+        self.count += 1
+        self.total += value
+
+    def GetMedianValue(self):
+        return np.median(self.deque)
+
+    def GetAverageValue(self):
+        return np.mean(self.deque)
+
+    def GetGlobalAverageValue(self):
+        return self.total / self.count
 
 
 def send_email(subject, body, to):

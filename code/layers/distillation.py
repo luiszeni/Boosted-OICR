@@ -17,6 +17,16 @@ class Distillation(nn.Module):
         nn.init.normal_(self.distillation.weight, std=0.01)
         nn.init.constant_(self.distillation.bias, 0)
 
+    def detectron_weight_mapping(self):
+        detectron_weight_mapping = {}
+        detectron_weight_mapping.update({
+            'distillation.weight'  : 'distillation_w',
+            'distillation.bias'    : 'distillation_b'
+        })
+
+        orphan_in_detectron = []
+        return detectron_weight_mapping, orphan_in_detectron
+
     def forward(self, x):
         if x.dim() == 4:
             x = x.squeeze(3).squeeze(2)

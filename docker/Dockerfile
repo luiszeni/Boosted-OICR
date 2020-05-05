@@ -28,7 +28,9 @@ RUN pip3 install cython
 RUN pip3 install pyyaml packaging scipy matplotlib pycocotools sklearn
 RUN pip3 install Pillow==6.1
 RUN pip3 install tensorboardX
-     
+RUN pip3 install tdqm
+RUN pip3 install layered-yaml-attrdict-config
+
 # enables tmux to use mouse
 RUN echo "set -g mouse on" > ~/.tmux.conf
 
