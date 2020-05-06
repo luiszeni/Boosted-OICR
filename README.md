@@ -3,7 +3,7 @@ By [Luis Felipe Zeni](http://luiszeni.com.br/) and [Claudio Jung](http://www.inf
 
 **Institute of Informatics, Federal University of Rio Grande do Sul, Brazil**
 
-This repository contains the PyTorch implementation of our paper [Distilling Knowledge from Refinement in Multiple Instance Detection Networks](http://soon) published in Deep Vision 2020 CVPR workshop. (Go to Contents section if you are interested in how to run the code).
+This repository contains the PyTorch implementation of our paper [Distilling Knowledge from Refinement in Multiple Instance Detection Networks](https://arxiv.org/abs/2004.10943) published in Deep Vision 2020 CVPR workshop. (Go to Contents section if you are interested in how to run the code).
 
 In this work, we claim that carefully selecting the aggregation criteria can considerably improve the accuracy of the learned detector. We start by proposing an additional refinement step to an existing approach (OICR), which we call refinement knowledge distillation. Then, we present an adaptive supervision aggregation function that dynamically changes the aggregation criteria for selecting boxes related to one of the ground-truth classes, background, or even ignored during the generation of each refinement module supervision. We call these improvements "Boosted-OICR". 
 
