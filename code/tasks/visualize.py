@@ -1,241 +1,117 @@
+import init_paths
 import argparse
+import time
 import cv2
+
 import os
+import yaml
 import pprint
-from six.moves import cPickle as pickle
-import xml.etree.ElementTree as ET
 import torch
-
-import _init_paths
-
-from tasks.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
-from tasks.test import empty_results, extend_results
-from tasks.test import box_results_with_nms_and_limit
-from datasets.json_dataset import JsonDataset
-
-from datasets.voc_dataset_evaluator import voc_info
+import sys
+from tqdm import tqdm
+from six.moves import cPickle as pickle
 from torchvision.ops.boxes import box_iou
+import numpy as np
 
-import utils.logging
+from models import *
+from datasets.pascal_voc import VOCDetection
+
+import datasets.voc_dataset_evaluator as voc_dataset_evaluator
+
+from tasks.config    import cfg, load_config
+
+import utils.data_transforms as dt_trans
+
+from utils.data_samplers           import VisualizeSampler, collate_minibatch_visualize
+from utils.detectron_weight_helper import load_detectron_weight
+from utils.training_stats import TrainingStats
+
+from utils.test_utils import box_results_for_corloc, box_results_with_nms_and_limit
+
+import logging
+from utils.logging import setup_logging
+logger = logging.getLogger(__name__)
 
 from pdb import set_trace as pause
 
 
-def parse_args():
-	parser = argparse.ArgumentParser(description='Visualize detections')
-	parser.add_argument(
-		'--dataset',
-		help='training dataset')
-	parser.add_argument(
-		'--cfg', dest='cfg_file', required=True,
-		help='optional config file')
-	parser.add_argument(
-		'--detections',
-		help='the path for result file.')
-	parser.add_argument(
-		'--output_dir',
-		help='output directory to save the testing results.')
-	parser.add_argument(
-		   '--set', dest='set_cfgs',
-		   help='set config keys, will overwrite config in the cfg_file.'
-				' See lib/core/config.py for all options',
-		   default=[], nargs='*')
-	return parser.parse_args()
+def get_detections(file_name):
+	file_name = os.path.abspath(file_name)
+	with open(file_name, 'rb') as f:
+		return pickle.load(f)['all_boxes']
 
 
-def parse_rec(filename):
-    """Parse a PASCAL VOC xml file."""
-    tree = ET.parse(filename)
-    objects = []
-    for obj in tree.findall('object'):
-        obj_struct = {}
-        obj_struct['name'] = obj.find('name').text
-        obj_struct['pose'] = obj.find('pose').text
-        obj_struct['truncated'] = int(obj.find('truncated').text)
-        obj_struct['difficult'] = int(obj.find('difficult').text)
-        bbox = obj.find('bndbox')
-        obj_struct['bbox'] = [int(bbox.find('xmin').text),
-                              int(bbox.find('ymin').text),
-                              int(bbox.find('xmax').text),
-                              int(bbox.find('ymax').text)]
-        objects.append(obj_struct)
+def gibe_me_cool_visualiztions(args, dataset):
 
-    return objects
-
-
-if __name__ == '__main__':
-
-	logger = utils.logging.setup_logging(__name__)
-	args = parse_args()
-	logger.info('Called with args:')
-	logger.info(args)
-
-
-
-	assert os.path.exists(args.detections)
-
-	save_detections = True
-
-	if args.output_dir is None:
-		save_detections = False
-		logger.info('No path loation informed, I will display the detections in opencv window')
-
-	if args.cfg_file is not None:
-		merge_cfg_from_file(args.cfg_file)
-
-	if args.set_cfgs is not None:
-		merge_cfg_from_list(args.set_cfgs)
-
-	classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
-
-	if args.dataset == 'voc2007test':
-		cfg.TEST.DATASETS = ('voc_2007_test',)
-		cfg.MODEL.NUM_CLASSES = 20
-	elif args.dataset == 'voc2012test':
-		cfg.TEST.DATASETS = ('voc_2012_test',)
-		cfg.MODEL.NUM_CLASSES = 20
-	elif args.dataset == 'voc2007trainval':
-		cfg.TEST.DATASETS = ('voc_2007_trainval',)
-		cfg.MODEL.NUM_CLASSES = 20
-	elif args.dataset == 'voc2012trainval':
-		cfg.TEST.DATASETS = ('voc_2012_trainval',)
-		cfg.MODEL.NUM_CLASSES = 20
-	else:  # For subprocess call
-		assert cfg.TEST.DATASETS, 'cfg.TEST.DATASETS shouldn\'t be empty'
-
-	assert_and_infer_cfg()
-
-	logger.info('Visualizing with following configs:')
-	logger.info(pprint.pformat(cfg))
-
-
-	# load detections
-	logger.info('Loading detections from:' + args.detections)
-	with open(args.detections, 'rb') as f:
-		results = pickle.load(f)
-	
-	all_boxes = results['all_boxes']
-
-
-	dataset = JsonDataset(cfg.TEST.DATASETS[0])
-	roidb = dataset.get_roidb()
-	num_images = len(roidb)
-	num_classes = cfg.MODEL.NUM_CLASSES + 1
-	final_boxes = empty_results(num_classes, num_images)
-
-	#load GT annotations
-
-	info_ann = voc_info(dataset)
-	ann_cachedir = os.path.join(info_ann['devkit_path'], 'annotations_cache_{}'.format(info_ann['year']))
-
-	if not os.path.isdir(ann_cachedir):
-		os.mkdir(ann_cachedir)
-
-	imagesetfile = os.path.join(info_ann['devkit_path'], 'VOC' + info_ann['year'], 'ImageSets', 'Main', info_ann['image_set'] + '.txt')
-
-	imageset  = os.path.splitext(os.path.basename(imagesetfile))[0]
-	annotations_cache_file = os.path.join(ann_cachedir, info_ann['image_set'] + '_annots.pkl')
-	# read list of images
-	with open(imagesetfile, 'r') as f:
-		lines = f.readlines()
-	imagenames = [x.strip() for x in lines]
-
-	if not os.path.isfile(annotations_cache_file):
-		# load annots
-		annotations = {}
-		for i, imagename in enumerate(imagenames):
-			annotations[imagename] = parse_rec(info_ann['anno_path'].format(imagename))
-			if i % 100 == 0:
-				logger.info(
-					'Reading annotation for {:d}/{:d}'.format(
-						i + 1, len(imagenames)))
-		# save
-		logger.info('Saving cached annotations to {:s}'.format(annotations_cache_file))
-		with open(annotations_cache_file, 'wb') as f:
-			pickle.dump(annotations, f, pickle.HIGHEST_PROTOCOL)
-	else:
-		# load
-		with open(annotations_cache_file, 'rb') as f:
-			annotations = pickle.load(f)
-
-
-	# apply nms into the detected boxes.
-
-	img_keys = []
-	for i, entry in enumerate(roidb):
-		boxes = all_boxes[entry['image']]
-		_, _, cls_boxes_i = box_results_with_nms_and_limit(boxes['scores'],  boxes['boxes'], boxes['cls_scores'])
-		extend_results(i, final_boxes, cls_boxes_i)
-		img_keys.append(entry['image'])
-
-
+	num_classes = cfg.MODEL.NUM_CLASSES
 	
 
-	# convert keys.
-	output = {}
 
-	for c in range(len(final_boxes)):
+	detections = get_detections(args.detections)
 
-		for img_idx in range(len(final_boxes[c])):
+	batchSampler = VisualizeSampler(len(dataset))
 
-			img_key = img_keys[img_idx].split('/')[-1].split('.')[0]
+	
+	dataloader = torch.utils.data.DataLoader(
+		dataset,
+		batch_sampler = batchSampler,
+		num_workers   = cfg.DATA_LOADER.NUM_THREADS,
+		collate_fn    = collate_minibatch_visualize)
 
+	for i, data in enumerate(dataloader):		
+		image, target, box_proposals, img_key, original_proposals = data
+		img_orig= image[0].copy()
+		img     = image[0]
+		img_key = img_key[0]
+
+		proposals = dataset.proposals[i]
+		detect = detections[img_key]
+
+
+		_, _, cls_boxes_i = box_results_with_nms_and_limit(detect.numpy(), proposals)
+
+
+		img_detections = cls_boxes_i
+
+		img_annotations = dataset.annotations[i]
 			
-			boxes   = final_boxes[c][img_idx]
-
-			if img_key not in output:
-				output[img_key] = {}
-
-			output[img_key][classes[c]] = boxes
-
-
-	# create the visualization (I know it is a mess...)
-	for img_key in img_keys:
-
-		short_key =  img_key.split("/")[-1].split('.')[0]
-
-		img = cv2.imread(img_key)
-
-		img_detections = output[short_key]
-
-		img_annotations = annotations[short_key]
-		
 
 		gt_boxes = []
 		gt_classes = []
-		for annotation in img_annotations:
-			
-			box = annotation['bbox']
-			gt_boxes.append(box)
+		for annotation in img_annotations['object']:
+			box = annotation['bndbox']
+			gt_boxes.append([ int(box['xmin']), int(box['ymin']), int(box['xmax']), int(box['ymax']) ]) 
 			gt_classes.append(annotation['name'])
+
 
 		det_boxes = []
 		det_classes = []
 		det_scores = []
 
-		for det_cls in img_detections:
 
-			boxes = img_detections[det_cls]
+		for c, det_cls in enumerate(img_detections):
 
-			if len(boxes) == 0:
+			if len(det_cls) == 0:
 				continue
 
-			for b in range(boxes.shape[0]):
+			for b in range(det_cls.shape[0]):
 
-				box = boxes[b,:4]
-				score = boxes[b,4]
+				box = det_cls[b,:4]
+				score = det_cls[b,4]
 
 				p1 = (int(box[0]), int(box[1]))
 				p2 = (int(box[2]), int(box[3]))
 
 				if score > 0.3:
 					det_boxes.append(box)
-					det_classes.append(det_cls)
+					det_classes.append(c-1)
 					det_scores.append(score)
 		
 		if len(det_boxes) == 0:
 			continue
-		gt_boxes = torch.tensor(gt_boxes).float()
+
+
+		gt_boxes  = torch.tensor(gt_boxes).float()
 		det_boxes = torch.tensor(det_boxes).float()
 
 		overlaps = box_iou(gt_boxes, det_boxes)
@@ -269,10 +145,6 @@ if __name__ == '__main__':
 				gt_p1 = (int(gt_box[0]), int(gt_box[1]))
 				gt_p2 = (int(gt_box[2]), int(gt_box[3]))
 
-			  
-
-
-
 				det_color = (0,255,0)
 				
 				if det_iou < 0.5:
@@ -280,7 +152,7 @@ if __name__ == '__main__':
 
 				img = cv2.rectangle(img, gt_p1, gt_p2, (255,0,0), 4)
 
-				text = "{:s} {:2d}%".format(det_class, int(det_score*100))
+				text = "{:s} {:2d}%".format(dataset.class_labels[det_class], int(det_score*100))
 
 				aft_det_boxes.append(det_box)
 				aft_det_boxes_txt.append(text)
@@ -292,7 +164,6 @@ if __name__ == '__main__':
 				gt_p2 = (int(gt_box[2]), int(gt_box[3]))
 
 				img = cv2.rectangle(img, gt_p1, gt_p2, (0,255,255), 4)
-
 
 		for b_im, det_box in enumerate(aft_det_boxes):
 
@@ -322,14 +193,68 @@ if __name__ == '__main__':
 
 			cv2.putText(img, text, (text_offset_x,text_offset_y) , font, font_scale, (0,0,0), thickness, cv2.LINE_AA)
 
-	
-
-		if save_detections: 
+		if args.output_dir is  None: 
+			cv2.imshow("Cool detections", img)
+			if cv2.waitKey(0) == ord('q'):
+				exit()
+		else:
 			save_at = os.path.join(args.output_dir, img_key.split('/')[-1].replace('.jpg','.png'))
 			print("saving:", save_at)
 			cv2.imwrite(save_at, img)
-		else:
-			cv2.imshow("cursed sanity", img)
-			if cv2.waitKey(0) == ord('q'):
-				exit()
+				
+	return detections
 
+
+
+def parse_args():
+	"""Parse in command line arguments"""
+	parser = argparse.ArgumentParser(description='Visualize detections')
+	parser.add_argument(
+		'--dataset',
+		help='training dataset')
+	parser.add_argument(
+		'--cfg', dest='cfg_file', required=True,
+		help='optional config file')
+	parser.add_argument(
+		'--detections',
+		help='the path for result file.')
+	parser.add_argument(
+		'--output_dir',
+		help='output directory to save the testing results.')
+	parser.add_argument(
+		   '--set', dest='set_cfgs',
+		   help='set config keys, will overwrite config in the cfg_file.'
+				' See lib/core/config.py for all options',
+		   default=[], nargs='*')
+	
+	return parser.parse_args()
+
+
+if __name__ == '__main__':
+
+	if not torch.cuda.is_available():
+		sys.exit("Need a CUDA device to run the code.")
+
+	logger = setup_logging(__name__)
+	args = parse_args()
+
+	load_config(args.cfg_file)
+
+	logger.info('Visualizing with config:')
+	logger.info(pprint.pformat(cfg))
+
+
+
+	if args.dataset == 'voc2007test':
+		dataset =  VOCDetection(cfg.DATA_DIR + '/', year='2007', image_set='test')
+	elif args.dataset == 'voc2012test':
+		dataset =  VOCDetection(cfg.DATA_DIR + '/', year='2012', image_set='test')
+	elif args.dataset == 'voc2007trainval':
+		dataset =  VOCDetection(cfg.DATA_DIR + '/', year='2007', image_set='trainval')
+	elif args.dataset == 'voc2012trainval':
+		dataset =  VOCDetection(cfg.DATA_DIR + '/', year='2012', image_set='trainval')
+	else:  # UOPS
+		assert cfg.TEST.DATASETS, 'cfg.TEST.DATASETS shouldn\'t be empty'
+
+
+	detections = gibe_me_cool_visualiztions(args, dataset)

@@ -103,6 +103,23 @@ class TestSampler(torch_sampler.BatchSampler):
         return self.num_images *  len(cfg.TEST.BBOX_AUG.SCALES) * (cfg.TEST.BBOX_AUG.H_FLIP*2)
 
 
+class VisualizeSampler(torch_sampler.BatchSampler):
+    def __init__(self, num_images):
+        self.num_images = num_images
+
+    def __iter__(self):
+        batch = []
+        
+        for image_idx in range(self.num_images):
+            
+            batch.append((image_idx, -1, False, 0))
+            yield batch
+            batch = []
+    
+    def __len__(self):
+        return self.num_images
+        
+
 def collate_minibatch(batch):
 
     data   = torch.stack([item[0] for item in batch])
@@ -113,6 +130,21 @@ def collate_minibatch(batch):
     original_proposals  = [item[4] for item in batch]
 
     return data, target, rois, img_key, original_proposals
+
+
+def collate_minibatch_visualize(batch):
+
+    data   = [item[0] for item in batch]
+    target = [item[1] for item in batch]
+    rois   = [item[2] for item in batch]
+
+    img_key             = [item[3] for item in batch]
+    original_proposals  = [item[4] for item in batch]
+
+    return data, target, rois, img_key, original_proposals
+
+
+
 
 
 

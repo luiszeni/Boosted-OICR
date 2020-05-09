@@ -33,7 +33,7 @@ Our code is under the MIT License (refer to the LICENSE file for details).
 If you find our paper or our implementation useful in your research, please consider citing:
 
     @article{zeni2020boostedoicr,
-        SOON 
+        Soon we will update this to the deepvision bibtex. For while plz cite the arxiv paper.  
     }
 
 ### Contents:
@@ -103,7 +103,7 @@ You should have the Nvidia-docker installed in your host machine
     ```
     2.4 Create a container using the image.  I prefer to mount an external volume with the code in a folder in the host machine. It makes it easier to edit the code using a GUI-text-editor or ide. This command will drop you in the container shell.
     ```Shell
-    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Bosted-OICR --shm-size 12G -ti \
+    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Boosted-OICR --shm-size 12G -ti \
     --name boicr boosted-oicr
     ```
   
@@ -260,17 +260,25 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
   ```
 
 
-##### Visualize the nice detections (NOT WORKING)
+##### Visualize the nice detections
 
-Create a folder to save the outputs
+
+
+You can run the visualization script to show the results in a openCV window
+  ```Shell
+  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
+  --detections snapshots/deepvision2020/test/final/detections.pkl 
+  ```
+
+...or you can save the visualizations as images. First create a folder to save the outputs
   ```Shell
   mkdir output
   ```
 
-Run the visualization script
+and pass it with the --output argument
   ```Shell
   python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
-  --detections snapshots/deepvision2020/test/final/detections.pkl --output_dir output
+  --detections snapshots/deepvision2020/test/final/detections.pkl --output output
   ```
 
 
@@ -284,6 +292,6 @@ We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues fo
 ### TODO list:
 
 - [x] Upload trained model.
-- [ ] Fix the visualization script
+- [x] Fix the visualization script
 - [ ] Add final paper link and the latex bibtex references
-- [ ] Adjust config file for voc2012.
+- [x] Adjust config file for voc2012.
