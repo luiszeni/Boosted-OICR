@@ -37,7 +37,7 @@ If you find our paper or our implementation useful in your research, please cons
     }
     
 ### News:
-25-may: Finally we received the results from VOC 2012 evaluation server, and we beat C-MIl in detection mAP :). By best of my knowledge this is the best WSOD result in the VOC until now. http://host.robots.ox.ac.uk:8080/anonymous/E7JSMD.html 
+25-may-2020: Finally we received the results from VOC 2012 evaluation server, and we beat C-MIl in detection mAP :). By best of my knowledge this is the best WSOD result in the VOC until now. http://host.robots.ox.ac.uk:8080/anonymous/E7JSMD.html 
 
 ### Contents:
 1. [Requirements: software](#requirements-software)
