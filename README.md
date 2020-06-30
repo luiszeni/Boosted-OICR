@@ -32,8 +32,12 @@ Our code is under the MIT License (refer to the LICENSE file for details).
 
 If you find our paper or our implementation useful in your research, please consider citing:
 
-    @article{zeni2020boostedoicr,
-        Soon we will update this to the deepvision bibtex. For while plz cite the arxiv paper.  
+    @inproceedings{zeni2020distilling,
+      title={Distilling Knowledge From Refinement in Multiple Instance Detection Networks},
+      author={Felipe Zeni, Luis and Jung, Claudio R},
+      booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops},
+      pages={768--769},
+      year={2020}
     }
     
 ### News:
@@ -296,5 +300,5 @@ We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues fo
 
 - [x] Upload trained model.
 - [x] Fix the visualization script
-- [ ] Add final paper link and the latex bibtex references
+- [x] Add final paper link and the latex bibtex references
 - [x] Adjust config file for voc2012.
