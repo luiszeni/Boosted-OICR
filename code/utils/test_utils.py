@@ -43,7 +43,7 @@ def box_results_with_nms_and_limit(scores, boxes):
         boxes_j = boxes[inds, :]
         dets_j = np.hstack((boxes_j, scores_j[:, np.newaxis])).astype(np.float32, copy=False)
 
-        keep = nms(torch.tensor(dets_j), torch.tensor(scores_j), torch.tensor(cfg.TEST.NMS))
+        keep = nms(torch.tensor(dets_j[:,:-1]), torch.tensor(scores_j), torch.tensor(cfg.TEST.NMS))
         nms_dets = dets_j[keep.numpy(), :]
 
         cls_boxes[j] = nms_dets

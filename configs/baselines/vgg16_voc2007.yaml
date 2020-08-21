@@ -3,19 +3,20 @@ TRAIN:
   # Available dataset list: datasets.dataset_catalog.DATASETS.keys()
   # If multiple datasets are listed, the model is trained on their union
   DATASET: 'voc_2007_trainval'
+
   # Scales to use during training
   # Each scale is the pixel size of an image's shortest side
   # If multiple scales are listed, then one is selected uniformly at random for
   # each training image (i.e., scale jitter data augmentation)
   SCALES: [480, 576, 688, 864, 1200]
+  # SCALES: [480]
+  # Max pixel size of the longest side of a scaled input image
+  MAX_SIZE: 2000
 
-
-  # Number of umages between each optmizer update.
   ITERATION_SIZE: 4
 
   # Images *per GPU* in the training minibatch
-  # Total images per minibatch: IMS_PER_BATCH * NUM_GPUS  
-  # Zeni: Legacy, I do not have two gpus ( :( )
+  # Total images per minibatch: IMS_PER_BATCH * NUM_GPUS
   IMS_PER_BATCH: 2
 
   # RoI minibatch size *per image* (number of regions of interest [ROIs])
@@ -34,6 +35,10 @@ TRAIN:
   # DATASETS
   PROPOSAL_FILES: 'data/selective_search_data/voc_2007_trainval.pkl'
 
+  # Snapshot (model checkpoint) period
+  # Divide by NUM_GPUS to determine actual period (e.g., 20000/8 => 2500 iters)
+  # to allow for linear training schedule scaling
+  SNAPSHOT_ITERS: 10000
 
   # Filter proposals that are inside of crowd regions by CROWD_FILTER_THRESH
   # "Inside" is measured as: proposal-with-crowd intersection area divided by
@@ -46,9 +51,21 @@ TRAIN:
   # Freeze the backbone architecture during training if set to True
   FREEZE_CONV_BODY: False
 
+  # The maximum number of proposal clusters
+  MAX_PC_NUM: 5
+
+  # The number of k-means clusters
+  NUM_KMEANS_CLUSTER: 3
+
+  # The IoU threshold to build graph
+  GRAPH_IOU_THRESHOLD: 0.4
+
   FG_THRESH: 0.5
 
   BG_THRESH: 0.1
+
+
+
 
 
 ADAPTATIVE_SUP:
@@ -65,7 +82,7 @@ DATA_LOADER:
   # Number of Python threads to use for the data loader (warning: using too many
   # threads can cause GIL-based interference with Python Ops leading to *slower*
   # training; 4 seems to be the sweet spot in our experience)
-  NUM_THREADS: 4
+  NUM_THREADS: 0
 
 
 
@@ -73,6 +90,11 @@ DATA_LOADER:
 # Inference ('test') options
 # ---------------------------------------------------------------------------- #
 TEST:
+
+  # Datasets to test on
+  # Available dataset list: datasets.dataset_catalog.DATASETS.keys()
+  # If multiple datasets are listed, testing is performed on each one sequentially
+  DATASETS: ()
 
   # Scale to use during testing (can NOT list multiple scales)
   # The scale is the pixel size of an image's shortest side
@@ -372,8 +394,34 @@ EPS: 1e-14
 OUTPUT_DIR: 'Outputs'
 
 # Name (or path to) the matlab executable
-MATLAB: 'octave'  # a
+MATLAB: 'octave'
 
+# Dump detection visualizations
+VIS: False
+
+# Score threshold for visualization
+VIS_TH: 0.9
+
+# Expected results should take the form of a list of expectations, each
+# specified by four elements (dataset, task, metric, expected value). For
+# example: [['coco_2014_minival', 'box_proposal', 'AR@1000', 0.387]]
+EXPECTED_RESULTS: []
+# Absolute and relative tolerance to use when comparing to EXPECTED_RESULTS
+EXPECTED_RESULTS_RTOL: 0.1
+EXPECTED_RESULTS_ATOL: 0.005
+# Set to send email in case of an EXPECTED_RESULTS failure
+EXPECTED_RESULTS_EMAIL: ''
+
+# ------------------------------
+# Data directory
+# DATA_DIR: osp.abspath(osp.join(ROOT_DIR, 'data'))
+
+# [Deprecate]
+POOLING_MODE: 'crop'
+
+# [Deprecate] Size of the pooled region after RoI pooling
+POOLING_SIZE: 7
+CROP_RESIZE_WITH_MAX_POOL: True
 CUDA: True
 DEBUG: False
 START_STEP: 0

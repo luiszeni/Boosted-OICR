@@ -9,7 +9,7 @@ from pdb import set_trace as pause
 from torchvision.datasets.utils import download_url, check_integrity, verify_str_arg
 import torch
 from torch.utils.data import Dataset
-from six.moves import cPickle as pickle
+import pickle
 import numpy as np
 import utils.boxes as box_utils
 from tasks.config    import cfg
