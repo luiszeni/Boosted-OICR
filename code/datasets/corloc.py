@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import os
 import numpy as np
 import logging
-
+from utils.misc import *
 logger = logging.getLogger(__name__)
 
 def parse_rec(filename):

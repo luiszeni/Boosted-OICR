@@ -127,7 +127,7 @@ class VOCDetection(Dataset):
 			if cfg.FAST_RCNN.TOP_K > 0:
 				boxes = boxes[:cfg.FAST_RCNN.TOP_K, :]
 			self.proposals.append(boxes.astype(np.float))
-
+		
 
 
 	def __getitem__(self, index):

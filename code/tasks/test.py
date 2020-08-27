@@ -43,7 +43,7 @@ def get_all_detections(args, dataset, early_stop=False):
 
 	if os.path.exists(det_file):
 		print('det_file', det_file, 'exits. I will use it')
-		return load_object(det_file)
+		return load_object(det_file)['all_boxes']
 
 	print('Creating detections...')
 	model = initialize_model_from_cfg(args)
@@ -110,13 +110,13 @@ def test_net_on_dataset(args, dataset, detections, use_matlab = True, early_stop
 		if early_stop and i > 10: break
 
 		detect = detections[dataset.images[i]]
-		proposals = dataset.proposals[i]
+		proposals = torch.tensor(dataset.proposals[i], dtype=torch.float32)
 
 		if detect is not None:
 			if test_corloc:
-				_, _, cls_boxes_i = box_results_for_corloc(detect.numpy(), proposals)
+				cls_boxes_i = box_results_for_corloc(detect, proposals)
 			else:
-				_, _, cls_boxes_i = box_results_with_nms_and_limit(detect.numpy(), proposals)
+				cls_boxes_i = box_results_with_nms_and_limit(detect, proposals)
 
 			extend_results(i, final_boxes, cls_boxes_i)
 		else:
