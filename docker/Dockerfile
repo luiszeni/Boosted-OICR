@@ -26,6 +26,7 @@ RUN pip3 install torch==1.6.0 torchvision==0.7.0 -f https://download.pytorch.org
 RUN pip3 install opencv-python==4.2.0.34
 RUN pip3 install tqdm
 RUN pip3 install layered-yaml-attrdict-config 
+RUN pip3 install tensorboardX
 
 # enables tmux to use mouse
 RUN echo "set -g mouse on" > ~/.tmux.conf

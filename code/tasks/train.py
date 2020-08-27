@@ -287,7 +287,7 @@ def main():
 
 		blob = {'cfg': yaml.dump(cfg), 'args': args}
 		
-		save_object(blob, output_dir)
+		save_object(blob, os.path.join(output_dir, 'config_and_args.pkl'))
 
 		if args.use_tfboard:
 			from tensorboardX import SummaryWriter
