@@ -54,6 +54,9 @@ If you find our paper or our implementation useful in your research, please cons
 
 ### Requirements: software
 
+- Linux OS (I did not tested it on other OS.)
+    - octave
+
 - python3 packages and versions used (listed using freeze frin pip):
     - cycler==0.10.0
     - Cython==0.29.16
@@ -76,6 +79,7 @@ If you find our paper or our implementation useful in your research, please cons
     - tensorboardX==2.0
     - torch==1.2.0+cu92
     - torchvision==0.4.0+cu92
+
 
 - An Nnvidia GPU wuth suport to CUDA 
     - We used cuda 10.0 and cudnn 7.0
