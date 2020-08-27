@@ -19,6 +19,7 @@ def box_results_for_corloc(scores, boxes):
 
 
 def box_results_with_nms_and_limit(scores, boxes):
+
     num_classes = cfg.MODEL.NUM_CLASSES + 1
     cls_boxes = [[] for _ in range(num_classes)]
     
@@ -28,7 +29,9 @@ def box_results_with_nms_and_limit(scores, boxes):
         boxes_j = boxes[inds, :]
 
         keep = nms(boxes_j, scores_j, cfg.TEST.NMS)
-        nms_dets = boxes_j[keep, :]
+        
+        dets_j = torch.cat((boxes_j, scores_j.reshape(-1, 1)), dim=1)
+        nms_dets = dets_j[keep, :]
 
         cls_boxes[j] = nms_dets
 
