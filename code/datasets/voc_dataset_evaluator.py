@@ -7,17 +7,11 @@ import subprocess
 
 from tasks.config import cfg
 from datasets.corloc import corloc_eval
-from six.moves import cPickle as pickle
 
+from utils.misc import *
 from pdb import set_trace as pause
 
 logger = logging.getLogger(__name__)
-
-def save_object(obj, file_name):
-    """Save a Python object by pickling it."""
-    file_name = os.path.abspath(file_name)
-    with open(file_name, 'wb') as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 def evaluate_boxes(voc_dataset, all_boxes, output_dir,  use_salt=True, cleanup=True, test_corloc=False, use_matlab=False):
     

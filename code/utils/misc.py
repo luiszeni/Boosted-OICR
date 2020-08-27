@@ -5,9 +5,22 @@ from datetime import datetime
 from itertools import chain
 
 import torch
+import pickle
 
 from tasks.config import cfg
 
+
+"""Save a Python object by pickling it."""
+def save_object(obj, file_name):
+    file_name = os.path.abspath(file_name)
+    with open(file_name, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+"""Load a Python object by unpickling it."""
+def load_object(file_name):
+    file_name = os.path.abspath(file_name)
+    with open(file_name, 'rb') as f:
+        return pickle.load(f)['all_boxes']
 
 def get_run_name():
     """ A unique name for each run """

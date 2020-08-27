@@ -9,9 +9,9 @@ from pdb import set_trace as pause
 from torchvision.datasets.utils import download_url, check_integrity, verify_str_arg
 import torch
 from torch.utils.data import Dataset
-import pickle
 import numpy as np
 import utils.boxes as box_utils
+from utils.misc import *
 from tasks.config    import cfg
 import logging
 logger = logging.getLogger(__name__)
@@ -106,8 +106,8 @@ class VOCDetection(Dataset):
 
 		##TODO ajust this to be more beauty =p
 		ss_data = self.root + 'selective_search_data/voc_' + self.year + '_' + self.image_set + '.pkl'
-		with open(ss_data, 'rb') as f:
-			proposals = pickle.load(f)
+		
+		proposals = load_object(ss_data)
 
 		sort_proposals(proposals, 'indexes')
 

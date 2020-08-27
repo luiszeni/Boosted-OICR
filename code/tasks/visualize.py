@@ -9,7 +9,6 @@ import pprint
 import torch
 import sys
 from tqdm import tqdm
-from six.moves import cPickle as pickle
 from torchvision.ops.boxes import box_iou
 import numpy as np
 
@@ -33,12 +32,7 @@ from utils.logging import setup_logging
 logger = logging.getLogger(__name__)
 
 from pdb import set_trace as pause
-
-
-def get_detections(file_name):
-	file_name = os.path.abspath(file_name)
-	with open(file_name, 'rb') as f:
-		return pickle.load(f)['all_boxes']
+from util.misc import *
 
 
 def gibe_me_cool_visualiztions(args, dataset):
@@ -46,8 +40,8 @@ def gibe_me_cool_visualiztions(args, dataset):
 	num_classes = cfg.MODEL.NUM_CLASSES
 	
 
-
-	detections = get_detections(args.detections)
+	detections_file = os.path.abspath(args.detections)
+	detections = load_object(detections_file)
 
 	batchSampler = VisualizeSampler(len(dataset))
 

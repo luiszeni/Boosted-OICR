@@ -2,7 +2,7 @@ import init_paths
 import argparse
 import os
 import sys
-import pickle
+
 import traceback
 
 import numpy as np
@@ -24,7 +24,7 @@ from utils.training_stats import TrainingStats
 
 import logging
 from utils.logging import setup_logging
-
+from utils.misc import *
 from pdb import set_trace as pause
 
 # Set up logging and load config options
@@ -286,8 +286,8 @@ def main():
 			os.makedirs(output_dir)
 
 		blob = {'cfg': yaml.dump(cfg), 'args': args}
-		with open(os.path.join(output_dir, 'config_and_args.pkl'), 'wb') as f:
-			pickle.dump(blob, f, pickle.HIGHEST_PROTOCOL)
+		
+		save_object(blob, output_dir)
 
 		if args.use_tfboard:
 			from tensorboardX import SummaryWriter

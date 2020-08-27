@@ -8,7 +8,7 @@ import pprint
 import torch
 import sys
 from tqdm import tqdm
-from six.moves import cPickle as pickle
+
 
 
 from models import *
@@ -30,18 +30,22 @@ from utils.logging import setup_logging
 logger = logging.getLogger(__name__)
 
 from pdb import set_trace as pause
-
-
-def save_object(obj, file_name):
-	"""Save a Python object by pickling it."""
-	file_name = os.path.abspath(file_name)
-	with open(file_name, 'wb') as f:
-		pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
-
+from utils.misc import *
 
 def get_all_detections(args, dataset, early_stop=False):
 
+
+	det_name = 'detections.pkl'
+	if 'train' in dataset.image_set:
+			det_name = 'discovery.pkl'
+
+	det_file = os.path.join(args.output_dir, det_name)
+
+	if os.path.exists(det_file):
+		print('det_file', det_file, 'exits. I will use it')
+		return load_object(det_file)
+
+	print('Creating detections...')
 	model = initialize_model_from_cfg(args)
 	num_images = len(dataset)
 	num_classes = cfg.MODEL.NUM_CLASSES
@@ -81,11 +85,7 @@ def get_all_detections(args, dataset, early_stop=False):
 		
 	cfg_yaml = yaml.dump(cfg)
 
-	det_name = 'detections.pkl'
-	if 'train' in dataset.image_set:
-			det_name = 'discovery.pkl'
 
-	det_file = os.path.join(args.output_dir, det_name)
 	save_object(
 		dict(
 			all_boxes=detections,
@@ -99,6 +99,7 @@ def get_all_detections(args, dataset, early_stop=False):
 
 def test_net_on_dataset(args, dataset, detections, use_matlab = True, early_stop=False):	
 	
+	print('Running test on detections...')
 	num_images = len(dataset)
 	num_classes = dataset.num_classes + 1
 	final_boxes = empty_results(num_classes, num_images)

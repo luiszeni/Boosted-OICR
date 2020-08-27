@@ -5,7 +5,6 @@
 # Written by Peng Tang
 # --------------------------------------------------------
 
-from six.moves import cPickle
 import xml.etree.ElementTree as ET
 import os
 import numpy as np
@@ -78,12 +77,11 @@ def corloc_eval(detpath,
                         i + 1, len(imagenames)))
         # save
         logger.info('Saving cached annotations to {:s}'.format(cachefile))
-        with open(cachefile, 'wb') as f:
-            cPickle.dump(recs, f, cPickle.HIGHEST_PROTOCOL)
+        save_object(recs, cachefile)
+
     else:
         # load
-        with open(cachefile, 'rb') as f:
-            recs = cPickle.load(f)
+        recs = load_object(cachefile)
 
     # extract gt objects for this class
     class_recs = {}
