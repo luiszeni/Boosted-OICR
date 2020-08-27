@@ -20,7 +20,7 @@ def save_object(obj, file_name):
 def load_object(file_name):
     file_name = os.path.abspath(file_name)
     with open(file_name, 'rb') as f:
-        return pickle.load(f)['all_boxes']
+        return pickle.load(f)
 
 def get_run_name():
     """ A unique name for each run """
