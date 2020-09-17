@@ -39,7 +39,6 @@ convention either decision seems to be ok (at least in our experience on COCO).
 Since we have a long history of training models with the "+ 1" convention, we
 are reluctant to change it even if our modern tastes prefer not to use it.
 """
-
 import warnings
 import numpy as np
 

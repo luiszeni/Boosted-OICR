@@ -7,7 +7,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from tasks.config import cfg
-# import nn as mynn
 
 from pdb import set_trace as pause
 

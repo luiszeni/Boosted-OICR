@@ -1,7 +1,5 @@
 FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
-
-ENV DEBIAN_FRONTEND noninteractive
-
+ENV DEBIAN_FRONTEND noninteractive # This is used because opencv installation asks for location
 RUN apt-get update && apt-get install -y --no-install-recommends \
          build-essential \
          git \
@@ -18,18 +16,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
          tmux\
          nano\
          htop\
-         octave\
          wget\
+         octave\
          && rm -rf /var/lib/apt/lists/*
 
+
 RUN pip3 install torch==1.2.0 torchvision==0.4.0 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip3 install opencv-python
-RUN pip3 install cython
-RUN pip3 install pyyaml packaging scipy matplotlib pycocotools sklearn
-RUN pip3 install Pillow==6.1
-RUN pip3 install tensorboardX
+
+RUN pip3 install opencv-python==4.2.0.34
 RUN pip3 install tqdm
-RUN pip3 install layered-yaml-attrdict-config
+RUN pip3 install pyyaml
+RUN pip3 install pycocotools
+RUN pip3 install tensorboardX
+
 
 # enables tmux to use mouse
 RUN echo "set -g mouse on" > ~/.tmux.conf

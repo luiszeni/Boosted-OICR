@@ -62,15 +62,7 @@ class DetectionModel(nn.Module):
         self.inner_iter = inner_iter 
 
     def forward(self, data, rois, labels):
-        if cfg.DEDUP_BOXES > 0:
-            v = np.array([1, 1e3, 1e6, 1e9, 1e12])
-            hashes = np.round(rois.cpu().numpy() * cfg.DEDUP_BOXES).dot(v)
-            
-            _, index, inv_index = np.unique(hashes, return_index=True, return_inverse=True)
-
-            rois  = rois[index, :]
-
-
+        
         with torch.set_grad_enabled(self.training):
 
             backbone_feat      = self.backbone(data)
@@ -137,18 +129,12 @@ class DetectionModel(nn.Module):
                 for k, v in return_dict['losses'].items():
                     return_dict['losses'][k] = v.unsqueeze(0)
             else:
-
-                
                 final_scores = refine_score[0]
                 for i in range(1, cfg.REFINE_TIMES):
                     final_scores += refine_score[i]
                 
                 final_scores += distillation_score
                 final_scores /= cfg.REFINE_TIMES + 1
-
-                if cfg.DEDUP_BOXES > 0:
-                    # Map scores and predictions back to the original set of boxes
-                    final_scores = final_scores[inv_index, :]
 
                 return_dict['final_scores'] = final_scores
 

@@ -1,20 +1,38 @@
+# Copyright (c) 2017-present, Facebook, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##############################################################################
+#
+# Based on:
 # --------------------------------------------------------
-# Online Instance Classifier Refinement
-# Copyright (c) 2019 HUST MCLAB
+# Fast/er R-CNN
 # Licensed under The MIT License [see LICENSE for details]
-# Written by Peng Tang
+# Written by Bharath Hariharan
 # --------------------------------------------------------
 
+"""Python implementation of the PASCAL VOC devkit's AP evaluation code."""
+
 from six.moves import cPickle
-import xml.etree.ElementTree as ET
-import os
-import numpy as np
 import logging
+import numpy as np
+import os
+import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
+
 def parse_rec(filename):
-    """ Parse a PASCAL VOC xml file """
+    """Parse a PASCAL VOC xml file."""
     tree = ET.parse(filename)
     objects = []
     for obj in tree.findall('object'):
@@ -32,18 +50,55 @@ def parse_rec(filename):
 
     return objects
 
-def corloc_eval(detpath,
+
+def voc_ap(rec, prec, use_07_metric=False):
+    """Compute VOC AP given precision and recall. If use_07_metric is true, uses
+    the VOC 07 11-point method (default:False).
+    """
+    if use_07_metric:
+        # 11 point metric
+        ap = 0.
+        for t in np.arange(0., 1.1, 0.1):
+            if np.sum(rec >= t) == 0:
+                p = 0
+            else:
+                p = np.max(prec[rec >= t])
+            ap = ap + p / 11.
+    else:
+        # correct AP calculation
+        # first append sentinel values at the end
+        mrec = np.concatenate(([0.], rec, [1.]))
+        mpre = np.concatenate(([0.], prec, [0.]))
+
+        # compute the precision envelope
+        for i in range(mpre.size - 1, 0, -1):
+            mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
+
+        # to calculate area under PR curve, look for points
+        # where X axis (recall) changes value
+        i = np.where(mrec[1:] != mrec[:-1])[0]
+
+        # and sum (\Delta recall) * prec
+        ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
+    return ap
+
+
+def voc_eval(detpath,
              annopath,
              imagesetfile,
              classname,
              cachedir,
-             ovthresh=0.5):
+             ovthresh=0.5,
+             use_07_metric=False):
     """rec, prec, ap = voc_eval(detpath,
                                 annopath,
                                 imagesetfile,
                                 classname,
-                                [ovthresh])
+                                [ovthresh],
+                                [use_07_metric])
+
     Top level function that does the PASCAL VOC evaluation.
+
     detpath: Path to detections
         detpath.format(classname) should produce the detection results file.
     annopath: Path to annotations
@@ -52,6 +107,8 @@ def corloc_eval(detpath,
     classname: Category name (duh)
     cachedir: Directory for caching the annotations
     [ovthresh]: Overlap threshold (default = 0.5)
+    [use_07_metric]: Whether to use VOC07's 11 point AP computation
+        (default False)
     """
     # assumes detections are in detpath.format(classname)
     # assumes annotations are in annopath.format(imagename)
@@ -61,7 +118,8 @@ def corloc_eval(detpath,
     # first load gt
     if not os.path.isdir(cachedir):
         os.mkdir(cachedir)
-    cachefile = os.path.join(cachedir, 'annots.pkl')
+    imageset = os.path.splitext(os.path.basename(imagesetfile))[0]
+    cachefile = os.path.join(cachedir, imageset + '_annots.pkl')
     # read list of images
     with open(imagesetfile, 'r') as f:
         lines = f.readlines()
@@ -87,13 +145,15 @@ def corloc_eval(detpath,
 
     # extract gt objects for this class
     class_recs = {}
-    nimgs = 0.0
+    npos = 0
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
         bbox = np.array([x['bbox'] for x in R])
+        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
         det = [False] * len(R)
-        nimgs = nimgs + float(bbox.size > 0)
+        npos = npos + sum(~difficult)
         class_recs[imagename] = {'bbox': bbox,
+                                 'difficult': difficult,
                                  'det': det}
 
     # read dets
@@ -103,11 +163,18 @@ def corloc_eval(detpath,
 
     splitlines = [x.strip().split(' ') for x in lines]
     image_ids = [x[0] for x in splitlines]
+    confidence = np.array([float(x[1]) for x in splitlines])
     BB = np.array([[float(z) for z in x[2:]] for x in splitlines])
+
+    # sort by confidence
+    sorted_ind = np.argsort(-confidence)
+    BB = BB[sorted_ind, :]
+    image_ids = [image_ids[x] for x in sorted_ind]
 
     # go down dets and mark TPs and FPs
     nd = len(image_ids)
     tp = np.zeros(nd)
+    fp = np.zeros(nd)
     for d in range(nd):
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
@@ -135,7 +202,22 @@ def corloc_eval(detpath,
             jmax = np.argmax(overlaps)
 
         if ovmax > ovthresh:
-            tp[d] = 1.
-            continue
+            if not R['difficult'][jmax]:
+                if not R['det'][jmax]:
+                    tp[d] = 1.
+                    R['det'][jmax] = 1
+                else:
+                    fp[d] = 1.
+        else:
+            fp[d] = 1.
 
-    return np.sum(tp) / nimgs
+    # compute precision recall
+    fp = np.cumsum(fp)
+    tp = np.cumsum(tp)
+    rec = tp / float(npos)
+    # avoid divide by zero in case the first detection matches a difficult
+    # ground truth
+    prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
+    ap = voc_ap(rec, prec, use_07_metric)
+
+    return rec, prec, ap

@@ -7,6 +7,14 @@ This repository contains the PyTorch implementation of our paper [Distilling Kno
 
 In this work, we claim that carefully selecting the aggregation criteria can considerably improve the accuracy of the learned detector. We start by proposing an additional refinement step to an existing approach (OICR), which we call refinement knowledge distillation. Then, we present an adaptive supervision aggregation function that dynamically changes the aggregation criteria for selecting boxes related to one of the ground-truth classes, background, or even ignored during the generation of each refinement module supervision. We call these improvements "Boosted-OICR". 
 
+### News:
+
+**17-sep-2020:** I returned the code to an old version. I made a considerable refactoring to release the code, and some of these changes impacted a little bit in the final mAP. As I am short on time, I decided to return the code to an older version (which is not beauty as the refactored one but have a better mAP in the end.). I also added a  reproducibility section in this document were I explain why the results are not the same after training with the same seed. 
+
+**25-may-2020:** Finally we received the results from VOC 2012 evaluation server, and we beat C-MIl in detection mAP :). By best of my knowledge this is the best WSOD result in the VOC until now. http://host.robots.ox.ac.uk:8080/anonymous/E7JSMD.html 
+
+
+
 ### We made improvements in OICR's architecture
 
 <p align="left">
@@ -40,8 +48,6 @@ If you find our paper or our implementation useful in your research, please cons
       year={2020}
     }
     
-### News:
-25-may-2020: Finally we received the results from VOC 2012 evaluation server, and we beat C-MIl in detection mAP :). By best of my knowledge this is the best WSOD result in the VOC until now. http://host.robots.ox.ac.uk:8080/anonymous/E7JSMD.html 
 
 ### Contents:
 1. [Requirements: software](#requirements-software)
@@ -106,7 +112,7 @@ You should have the Nvidia-docker installed in your host machine
     ```
     2.2. Build the docker image 
     ```Shell
-    docker build . -t boosted-oicr
+    docker build . -t boicr
     ```
     2.3. Return to the root of the repo ($BOOSTED_OICR_ROOT)
     ```Shell
@@ -114,14 +120,14 @@ You should have the Nvidia-docker installed in your host machine
     ```
     2.4 Create a container using the image.  I prefer to mount an external volume with the code in a folder in the host machine. It makes it easier to edit the code using a GUI-text-editor or ide. This command will drop you in the container shell.
     ```Shell
-    docker run --gpus all -v  $BOOSTED_OICR_ROOT/Boosted-OICR:/root/Boosted-OICR --shm-size 12G -ti \
-    --name boicr boosted-oicr
+    docker run --gpus all -v  $(pwd):/root/Boosted-OICR --shm-size 12G -ti \
+    --name boicr boicr
     ```
   
     2.5 If, in any moment of the future, you exit the container, you can enter the container again using this command.
-      ```Shell
-      docker start -ai boicr 
-      ```
+    ```Shell
+    docker start -ai boicr 
+    ```
   
     **Observation:** I will not talk about how to display windows using X11 forwarding from the container to the host X. You will need this if you are interested to use the visualization scripts. There are a lot of tutorials on the internet teching X11 Foward in Docker. 
   
@@ -240,9 +246,9 @@ You should have the Nvidia-docker installed in your host machine
 
 ##### Calculating the detection mAP in Pascal VOC 2007 (test set)
   ```Shell
-  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007test \
-  --model oicr_lambda_log_distillation \
-  --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
+  python3 code/tasks/test_net.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval \
+    --model oicr_lambda_log_distillation \
+    --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
 
@@ -251,16 +257,22 @@ You should have the Nvidia-docker installed in your host machine
 To **Train** the Boosted-OICR network on VOC 2007 trainval set:
 
   ```Shell
-  python3 code/tasks/train.py --cfg configs/baselines/vgg16_voc2007.yaml --model oicr_lambda_log_distillation
+  python3 code/tasks/train.py --dataset voc2007 \
+  --cfg configs/baselines/vgg16_voc2007.yaml \
+  --bs 1 --nw 4 --iter_size 4 --model oicr_lambda_log_distillation
   ```
 
 To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 ##### On trainval (corloc)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval \
+    python3 code/tasks/test_net.py --cfg configs/baselines/vgg16_voc2007.yaml  --dataset voc2007trainval \
     --model oicr_lambda_log_distillation \
     --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
+
+
+
+
   ```
 
 ##### On test (detection mAP)
