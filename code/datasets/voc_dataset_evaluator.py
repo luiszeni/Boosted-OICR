@@ -133,12 +133,13 @@ def _eval_discovery(json_dataset, salt, output_dir='output'):
         res_file = os.path.join(output_dir, cls + '_corloc.pkl')
         save_object({'corloc': corloc}, res_file)
     logger.info('Mean CorLoc = {:.4f}'.format(np.mean(corlocs)))
-    logger.info('~~~~~~~~')
-    logger.info('Results:')
+    
+    print('~'*20)
+    print('Final CorLoc Results:')
     for corloc in corlocs:
-        logger.info('{:.3f}'.format(corloc))
-    logger.info('{:.3f}'.format(np.mean(corlocs)))
-    logger.info('~~~~~~~~')
+        print('{:.1f}'.format(corloc*100), end=', ')
+    print('{:.1f}'.format(np.mean(corlocs)*100))
+    print('~'*20)
 
 
 def _do_python_eval(json_dataset, salt, output_dir='output'):
