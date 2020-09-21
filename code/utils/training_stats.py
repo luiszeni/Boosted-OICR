@@ -16,7 +16,6 @@
 ##############################################################################
 
 """Utilities for training."""
-
 from collections import defaultdict, OrderedDict
 import datetime
 import numpy as np
@@ -25,6 +24,7 @@ from tasks.config import cfg
 from utils.logging import log_stats
 from utils.logging import SmoothedValue
 from utils.timer import Timer
+import utils.net as nu
 
 
 class TrainingStats(object):

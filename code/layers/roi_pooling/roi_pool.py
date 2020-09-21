@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
 
-# from .._ext import roi_pooling
-import pdb
+from pdb import set_trace as pause
 from tasks.config import cfg
 import torchvision.ops as ops
 
@@ -35,6 +34,7 @@ class RoiPoolLayer(nn.Module):
         return detectron_weight_mapping, []
 
     def forward(self, x, rois):
+
         x = self.roi_pool(x, rois)
         batch_size = x.size(0)
         x = F.relu(self.fc1(x.view(batch_size, -1)), inplace=True)
