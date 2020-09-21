@@ -1,4 +1,4 @@
-"""Perform re-evaluation on one or more datasets."""
+##  This code is a huge mess, sorry. :)
 
 import argparse
 import cv2
@@ -10,9 +10,9 @@ from six.moves import cPickle as pickle
 
 import torch
 
-import _init_paths  # pylint: disable=unused-import
+import _init_paths 
 from tasks.config import cfg, merge_cfg_from_file, merge_cfg_from_list, assert_and_infer_cfg
-from tasks.test_engine import empty_results, extend_results
+from tasks.test import empty_results, extend_results
 from tasks.test import box_results_for_corloc, box_results_with_nms_and_limit
 from datasets.json_dataset import JsonDataset
 from datasets import task_evaluation
@@ -24,14 +24,9 @@ import utils.logging
 
 from pdb import set_trace as pause
 
-# OpenCL may be enabled by default in OpenCV3; disable it because it's not
-# thread safe and causes unwanted GPU memory allocations.
-cv2.ocl.setUseOpenCL(False)
-
 
 def parse_args():
-    """Parse in command line arguments"""
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
+    parser = argparse.ArgumentParser(description='Visualize results =)')
     parser.add_argument(
         '--dataset',
         help='training dataset')
@@ -39,47 +34,28 @@ def parse_args():
         '--cfg', dest='cfg_file', required=True,
         help='optional config file')
     parser.add_argument(
-        '--result_path',
+        '--detections',
         help='the path for result file.')
     parser.add_argument(
         '--output_dir',
-        help='output directory to save the testing results.')
-    parser.add_argument(
-        '--set', dest='set_cfgs',
-        help='set config keys, will overwrite config in the cfg_file.'
-             ' See lib/core/config.py for all options',
-        default=[], nargs='*')
+        help='output directory to save the testing results.', default=None)
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
 
-
-
     logger = utils.logging.setup_logging(__name__)
     args = parse_args()
     logger.info('Called with args:')
     logger.info(args)
 
-    assert os.path.exists(args.result_path)
-
-    if args.output_dir is None:
-        args.output_dir = os.path.dirname(args.result_path)
-        logger.info('Automatically set output directory to %s', args.output_dir)
+    assert os.path.exists(args.detections)
 
     if args.cfg_file is not None:
         merge_cfg_from_file(args.cfg_file)
-    if args.set_cfgs is not None:
-        merge_cfg_from_list(args.set_cfgs)
 
-    if args.dataset == "coco2014":
-        cfg.TEST.DATASETS = ('coco_2014_val',)
-        cfg.MODEL.NUM_CLASSES = 80
-    elif args.dataset == "coco2017":
-        cfg.TEST.DATASETS = ('coco_2017_val',)
-        cfg.MODEL.NUM_CLASSES = 80
-    elif args.dataset == 'voc2007test':
+    if args.dataset == 'voc2007test':
         cfg.TEST.DATASETS = ('voc_2007_test',)
         cfg.MODEL.NUM_CLASSES = 20
     elif args.dataset == 'voc2012test':
@@ -91,16 +67,18 @@ if __name__ == '__main__':
     elif args.dataset == 'voc2012trainval':
         cfg.TEST.DATASETS = ('voc_2012_trainval',)
         cfg.MODEL.NUM_CLASSES = 20
-    else:  # For subprocess call
+    else: 
         assert cfg.TEST.DATASETS, 'cfg.TEST.DATASETS shouldn\'t be empty'
     assert_and_infer_cfg()
+
+    classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
 
     logger.info('Re-evaluation with config:')
     logger.info(pprint.pformat(cfg))
 
-    with open(args.result_path, 'rb') as f:
+    with open(args.detections, 'rb') as f:
         results = pickle.load(f)
-        logger.info('Loading results from {}.'.format(args.result_path))
+        logger.info('Loading results from {}.'.format(args.detections))
     all_boxes = results['all_boxes']
 
     dataset_name = cfg.TEST.DATASETS[0]
@@ -111,18 +89,15 @@ if __name__ == '__main__':
     final_boxes = empty_results(num_classes, num_images)
     test_corloc = 'train' in dataset_name
 
-  
 
     info_ann = voc_info(dataset)
     ann_cachedir = os.path.join(info_ann['devkit_path'], 'annotations_cache_{}'.format(info_ann['year']))
     annotations_cache_file = os.path.join(ann_cachedir, 'test_annots.pkl')
+    
     # read list of images
-
     with open(annotations_cache_file, 'rb') as f:
         annotations  = pickle.load(f)
     
-
-
     img_keys = []
     for i, entry in enumerate(roidb):
 
@@ -130,14 +105,10 @@ if __name__ == '__main__':
         if test_corloc and not save_detections:
             _, _, cls_boxes_i = box_results_for_corloc(boxes['scores'], boxes['boxes'])
         else:
-            _, _, cls_boxes_i = box_results_with_nms_and_limit(boxes['scores'],  boxes['boxes'], boxes['cls_scores'])
+            _, _, cls_boxes_i = box_results_with_nms_and_limit(boxes['scores'],  boxes['boxes'])
         extend_results(i, final_boxes, cls_boxes_i)
         img_keys.append(entry['image'])
     
-    
-
-    classes = ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
-
 
     output = {}
 
@@ -176,11 +147,6 @@ if __name__ == '__main__':
             gt_boxes.append(box)
             gt_classes.append(annotation['name'])
 
-            # p1 = (int(box[0]), int(box[1]))
-            # p2 = (int(box[2]), int(box[3]))
-
-            # img = cv2.rectangle(img, p1, p2, (255,0,0), 2)
-
         det_boxes = []
         det_classes = []
         det_scores = []
@@ -204,20 +170,6 @@ if __name__ == '__main__':
                     det_boxes.append(box)
                     det_classes.append(det_cls)
                     det_scores.append(score)
-
-                    # img = cv2.rectangle(img, p1, p2, (0,255,0), 2)
-
-                    # font = cv2.FONT_HERSHEY_SIMPLEX
-
-                    # p1 = (int(box[0]), int(box[1]-5))
-                    # cv2.putText(img, det_cls, p1, font, 0.7,(0,0,255),2,cv2.LINE_AA)
-
-                # elif score > 0.2:
-                #     img = cv2.rectangle(img, p1, p2, (255,0,0), 2) 
-                # elif score > 0.1:
-                #     img = cv2.rectangle(img, p1, p2, (255,255,255), 2) 
-                # # else:
-                #     # img = cv2.rectangle(img, p1, p2, (0,0,255), 2) 
         
         if len(det_boxes) == 0:
             continue
@@ -250,15 +202,13 @@ if __name__ == '__main__':
             det_score = det_scores[best_det_idx]
 
             if best_det_idx not in used_detections and det_iou > 0:
+                # in this case this detection box was never used
                 used_detections.append(best_det_idx)
 
                 gt_p1 = (int(gt_box[0]), int(gt_box[1]))
                 gt_p2 = (int(gt_box[2]), int(gt_box[3]))
 
               
-
-
-
                 det_color = (0,255,0)
                 
                 if det_iou < 0.5:
@@ -271,13 +221,6 @@ if __name__ == '__main__':
                 aft_det_boxes.append(det_box)
                 aft_det_boxes_txt.append(text)
                 aft_det_color.append(det_color)
-
-
-                
-                
-
-                # pause()
-                # in this case this detection box was never used
 
             else:
                 # if we fall here, gt box dont have a detection box
@@ -301,7 +244,6 @@ if __name__ == '__main__':
             font_scale = 0.7
             thickness = 1
             
-            # pause()
             (text_width, text_height)  = cv2.getTextSize(text, font, font_scale, thickness)[0]
 
 
@@ -316,15 +258,11 @@ if __name__ == '__main__':
 
             cv2.putText(img, text, (text_offset_x,text_offset_y) , font, font_scale, (0,0,0), thickness, cv2.LINE_AA)
 
-    
-
-
-        if True: 
-            print(img_key)
-            save_at = img_key.replace('data/VOCdevkit/VOC2007/JPEGImages', 'img_results').replace('.jpg','.png')
+        if args.output_dir is not None: 
+            save_at = img_key.replace('data/VOCdevkit/VOC2007/JPEGImages', args.output_dir).replace('.jpg','.png')
+            print(save_at)
             cv2.imwrite(save_at, img)
         else:
-            cv2.imshow("cursed sanity", img)
+            cv2.imshow("yey", img)
             if cv2.waitKey(0) == ord('q'):
                 exit()
-

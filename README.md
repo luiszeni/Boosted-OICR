@@ -6,7 +6,7 @@ By [Luis Felipe Zeni](http://luiszeni.com.br/) and [Claudio Jung](http://www.inf
 This repository contains the PyTorch implementation of our paper [Distilling Knowledge from Refinement in Multiple Instance Detection Networks](https://arxiv.org/abs/2004.10943) published in Deep Vision 2020 CVPR workshop. (Go to Contents section if you are interested in how to run the code).
 ---
 ### News:
-**17-sep-2020:** I returned the code to an old version. I made a considerable refactoring to release the code, and some of these changes impacted a little bit in the final mAP. As I am short on time, I decided to return the code to an older version (which is not beauty as the refactored one but have a better mAP in the end.). I also added a  reproducibility section in this document were I explain why the results are not the same after training with the same seed. 
+**21-sep-2020:** I returned the code to an old version. I made a considerable refactoring to release the code, and some of these changes impacted a little bit in the final mAP. As I am short on time, I decided to return the code to an older version (which is not beauty as the refactored one but have a better mAP in the end.). I also added a  reproducibility section in this document were I explain why the results are not the same after training with the same seed. 
 
 **25-may-2020:** Finally we received the results from VOC 2012 evaluation server, and we beat C-MIl in detection mAP :). By best of my knowledge this is the best WSOD result in the VOC until now. http://host.robots.ox.ac.uk:8080/anonymous/E7JSMD.html 
 
@@ -55,7 +55,7 @@ If you find our paper or our implementation useful in your research, please cons
 4. [Installation for training and testing](#installation-for-training-and-testing)
 5. [Extra Downloads (Models trained on PASCAL VOC)](#download-models-trained-on-pascal-voc)
 6. [Usage](#usage)
-7. [TODO](#what-we-are-going-to-do)
+6. [About the training reproducibility](#about-repro)
 
 ### Requirements: software
 
@@ -288,16 +288,42 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 ##### Visualize the nice detections
 
-TODO
 
+You can run the visualization script to show the results in a openCV window
+  ```Shell
+  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml\
+  --dataset voc2007test\
+  --detections snapshots/deepvision2020/test/final/detections.pkl
+  ```
+
+...or you can save the visualizations as images. First create a folder to save the outputs
+  ```Shell
+  mkdir img_out
+  ```
+
+and pass it with the --output_dir argument
+  ```Shell
+  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml\
+  --dataset voc2007test\
+  --detections snapshots/deepvision2020/test/final/detections.pkl\
+  --output_dir img_out
+  ```
 
 ##### Training a Fast-RCNN using the trained model.
 
 We used the code available [here](https://github.com/ppengtang/fast-rcnn) 
 
-### About the reproducibility:
+### About the training reproducibility:
 
-TODO
+If you use model weights available to download, you will reproduce the same mAP, and Corloc described in the paper on the Pascal VOC2007 dataset. However, if you retrain the model, the final mAP and Corloc can differ from those described in the article.
+
+I tried my best to make the result after the retraining using the same seed to be as similar as possible.  Anyway, even fixing the seed, the results differ a little between different training instances. I am not sure from where this non-determinism comes. My best guess is that it is coming from the RoiPooling implemented in the Torchvision. 
+
+I retrained the model with the same seed five times, and the final mAP oscillates between 49.0 and 49.9. 
+
+It is also important to be aware that completely reproducible results are not guaranteed across PyTorch versions (https://pytorch.org/docs/stable/notes/randomness.html), so make sure to use the same version that we use here.
+
+
 
 ### Special Thanks:
 We would like to thanks [Peng Tang](https://pengtang.xyz/) and his colleagues for making the [PCL](https://github.com/ppengtang/pcl.pytorch) and [OICR](https://github.com/ppengtang/oicr) codes publicly available. 
