@@ -236,18 +236,18 @@ You should have the Nvidia-docker installed in your host machine
 
 ##### Calculating the detection mAP in Pascal VOC 2007 (test set)
   ```Shell
-  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml\
-    --dataset voc2007test\
-    --model oicr_lambda_log_distillation\
-    --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth\
+  python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml \
+    --dataset voc2007test \
+    --model oicr_lambda_log_distillation \
+    --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth \
     --use_matlab
   ```
 
 ##### Calculating the corloc in Pascal VOC 2007 (trainval set)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml\
-    --dataset voc2007trainval\
-    --model oicr_lambda_log_distillation\
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml \
+    --dataset voc2007trainval \
+    --model oicr_lambda_log_distillation \
     --load_ckpt snapshots/deepvision2020/oicr_lambda_log_distillation/final.pth
   ```
 
@@ -258,8 +258,8 @@ You should have the Nvidia-docker installed in your host machine
 To **Train** the Boosted-OICR network on VOC 2007 trainval set:
 
   ```Shell
-  python3 code/tasks/train.py --dataset voc2007\
-  --cfg configs/baselines/vgg16_voc2007.yaml\
+  python3 code/tasks/train.py --dataset voc2007 \
+  --cfg configs/baselines/vgg16_voc2007.yaml \
   --bs 1 --nw 4 --iter_size 4 --model oicr_lambda_log_distillation
   ```
 
@@ -268,18 +268,18 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 ##### On test (detection mAP)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml\
-    --dataset voc2007test\
-    --model oicr_lambda_log_distillation\
-    --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth\
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml \
+    --dataset voc2007test \
+    --model oicr_lambda_log_distillation \
+    --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth \
     --use_matlab
   ```
 
 ##### On trainval (corloc)
   ```Shell
-    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml\
-    --dataset voc2007trainval\
-    --model oicr_lambda_log_distillation\
+    python3 code/tasks/test.py --cfg configs/baselines/vgg16_voc2007.yaml \
+    --dataset voc2007trainval \
+    --model oicr_lambda_log_distillation \
     --load_ckpt snapshots/oicr_lambda_log_distillation/<some-running-date-time>/ckpt/model_step24999.pth
   ```
 
@@ -291,8 +291,8 @@ To **Evaluate** the Boosted-OICR network on VOC 2007:
 
 You can run the visualization script to show the results in a openCV window
   ```Shell
-  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml\
-  --dataset voc2007test\
+  python3 code/tasks/visualize.py --cfg configs/baselines/vgg16_voc2007.yaml \
+  --dataset voc2007test \
   --detections snapshots/deepvision2020/test/final/detections.pkl
   ```
 
